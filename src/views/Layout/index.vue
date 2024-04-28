@@ -1,13 +1,25 @@
 <template>
-  <div>
-    我是首页
-    <!-- 二级路由出口 -->
+    <Fixed/>
+    <LayoutNav/>
+    <LayoutHeader/>
     <RouterView/>
-  </div>
+    <LayoutFooter/>
+
 </template>
 
 <script setup lang='ts'>
-  
+  import LayoutNav from './components/Nav.vue'
+  import LayoutHeader from './components/Header.vue'
+  import LayoutFooter from './components/Footer.vue'
+  import Fixed from './components/Fixed.vue'
+import { useCategoryStore } from '@/stores/category';
+import { onMounted } from 'vue';
+
+  const categoryStore = useCategoryStore();
+  onMounted(()=>{
+    categoryStore.getCategory()
+  })
+
 </script>
 
 <style scoped>
