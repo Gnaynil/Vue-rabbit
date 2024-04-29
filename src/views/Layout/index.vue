@@ -12,7 +12,7 @@
   import LayoutHeader from './components/Header.vue'
   import LayoutFooter from './components/Footer.vue'
   import Fixed from './components/Fixed.vue'
-import { useCategoryStore } from '@/stores/category';
+import { useCategoryStore } from '@/stores/category.js';
 import { onMounted } from 'vue';
 
   const categoryStore = useCategoryStore();

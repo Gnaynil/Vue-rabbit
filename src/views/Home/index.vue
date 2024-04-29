@@ -1,14 +1,22 @@
 <template>
-  我是Home
-    <div style="height:1200px">
-      
-    </div>
-  </template>
+  <div class="container">
+    <HomeCategory />
+    <HomeBanner />
+  </div>
+  <HomeNew />
+  <HomeHot />
+  <homeProduct />
+</template>
   
   <script setup lang='ts'>
-    
-  </script>
+import HomeCategory from "./components/Category.vue";
+import HomeBanner from "./components/Banner.vue";
+import HomeNew from "./components/New.vue";
+import HomeHot from "./components/Hot.vue";
+import homeProduct from "./components/Product.vue";
+import Pannel from "./components/Pannel.vue";
+
+</script>
   
   <style scoped>
-  
-  </style>
+</style>
