@@ -21,11 +21,11 @@ export const useCartStore = defineStore('cart', () => {
   }
   // 2. 定义action - addCart
   const addCart = async (goods) => {
-    console.log('添加', goods)
+    // console.log('添加', goods)
     const { skuId, count } = goods
     if (isLogin.value) {
       //登录之后加入购物车逻辑
-      console.log('登录了');
+      // console.log('登录了');
       await insertCartAPI({ skuId, count })
       updateNewList()
     }

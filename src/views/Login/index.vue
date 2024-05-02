@@ -39,7 +39,7 @@ const doLogin = () => {
   //调用实例方法
   formRef.value.validate(async (valid) => {
     //valid 所以表单都通过校验 才为true
-    console.log(valid);
+    // console.log(valid);
     if (valid) {
       //TODO LOGIN
       await userStore.getUserInfo({account,password})

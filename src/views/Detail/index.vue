@@ -19,14 +19,11 @@ onMounted(() => {
 //sku规格被操作时
 let skuObj = {}
 const skuChange = (sku) => {
-  console.log(sku);
   skuObj = sku
 };
 
 const count =  ref(1);
-const countChange = (count) =>{
-  console.log(count);
-}
+
 
 const cartStore = useCartStore()
 //添加购物车
@@ -49,7 +46,6 @@ const addCart = () =>{
     ElMessage.warning('请选择规格')
   }
 }
-console.log(cartStore.cartList);
 
 </script>
 
@@ -141,7 +137,6 @@ console.log(cartStore.cartList);
                 v-model="count"
                 :min="1"
                 :max="10"
-                @change="countChange"
               />
               <!-- 按钮组件 -->
               <div>
