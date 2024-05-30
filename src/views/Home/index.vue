@@ -14,7 +14,6 @@ import HomeBanner from "./components/Banner.vue";
 import HomeNew from "./components/New.vue";
 import HomeHot from "./components/Hot.vue";
 import homeProduct from "./components/Product.vue";
-import Pannel from "./components/Pannel.vue";
 
 </script>
   

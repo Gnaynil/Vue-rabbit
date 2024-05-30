@@ -19,7 +19,7 @@ const confirm = () => {
     <div class="container">
       <ul>
         <template v-if="userInfo.token">
-          <li><a href="javascript:;"><i class="iconfont icon-user"></i>{{ userInfo.account }}</a></li>
+          <li><a href="/member"><i class="iconfont icon-user"></i>{{ userInfo.account }}</a></li>
           <li>
             <el-popconfirm
               @confirm="confirm"

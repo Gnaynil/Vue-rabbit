@@ -5,30 +5,39 @@ import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import DetailHot from "./components/DetailHot.vue";
 import { useCartStore } from "@/stores/cart.js";
+// import axios from 'axios'
 
 const goods = ref([]);
+// const skusData = ref([])
 const route = useRoute();
 
 const getGoods = async () => {
   const res = await getDetail(route.params.id);
   goods.value = res.result;
 };
+// const getSkusData = async () => {
+//   const res = await axios.get('http://localhost:3000/result')
+//   // const res = await axios.get('http://pcapi-xiaotuxian-front-devtest.itheima.net/goods?id=1135076')
+//   skusData.value = res.data;
+// };
+
 onMounted(() => {
   getGoods();
+  // getSkusData()
 });
 //sku规格被操作时
-let skuObj = {}
+let skuObj = ref({})
 const skuChange = (sku) => {
-  skuObj = sku
+  skuObj.value = sku
+  console.log(skuObj.value,'1111');
 };
 
 const count =  ref(1);
 
-
 const cartStore = useCartStore()
 //添加购物车
 const addCart = () =>{
-  if(skuObj.skuId){
+  if(skuObj.value.id){
     //规格已经选择
     cartStore.addCart({
       id:goods.value.id,
@@ -36,8 +45,8 @@ const addCart = () =>{
       picture:goods.value.mainPictures[0],
       price:goods.value.price,
       count:count.value,
-      skuId:skuObj.skuId,
-      attrsText:skuObj.specsText,
+      skuId:skuObj.value.id,
+      attrsText:skuObj.value.specs.reduce((p, n) => `${p} ${n.name}：${n.valueName}`, '').trim(),
       selected:true
     })
   }
