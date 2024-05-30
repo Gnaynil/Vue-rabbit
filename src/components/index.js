@@ -2,6 +2,8 @@
 //通过插件的方式
 import ImageView from '@/components/ImageView/index.vue'
 import Sku from '@/components/XtxSku/index.vue'
+// import Sku from '@/components/XtxSku/Sku.vue'
+
 
 export const componentPlugin = {
     install(app){

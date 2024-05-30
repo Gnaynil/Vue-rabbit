@@ -13,11 +13,11 @@ const categoryStore = useCategoryStore()
         v-for="item in categoryStore.categoryList"
         :key="item.id"
       >
-        <RouterLink to="/">{{item.name}}</RouterLink>
+        <RouterLink :to="`/category/${item.id}`">{{item.name}}</RouterLink>
         <RouterLink
           v-for="i in item.children.slice(0,2)"
           :key="i.id"
-          to="/"
+          :to="`/category/${item.id}`"
         >{{ i.name }}</RouterLink>
         <!-- 弹层layer位置 -->
         <div class="layer">

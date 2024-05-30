@@ -1,149 +1,153 @@
+<script setup>
+import { onMounted } from "vue";
+import getPowerSet from "./power-set";
+const props = defineProps({
+  goods: {
+    type: Object,
+    default: () => {},
+  },
+});
+//需要在setup函数里定义defineEmits才能正常使用 不能在函数内定义defineEmits
+const emits = defineEmits(["change"]);
+let pathMap = {};
+//点击时实时更新sku
+const changeSelectedStatus = (item, val) => {
+  if (val.disabled) return;
+  if (val.selected) {
+    val.selected = false;
+  } else {
+    item.values.forEach((valItem) => (valItem.selected = false));
+    val.selected = true;
+  }
+  updateDisabledState(props.goods.specs, pathMap);
+  //产出SKU对象数据
+
+  const index = getSelectedValues(props.goods.specs).findIndex(
+    (item) => item === undefined
+  );
+  // console.log(index);
+  if (index > -1) {
+    // console.log("找到了,信息不完整");
+  } else {
+    // console.log("没有找到,信息完整,可以产出");
+    //获取SKU对象
+    const key = getSelectedValues(props.goods.specs).join("-");
+    const skuIds = pathMap[key];
+    //以skuId作为匹配项求props.goods.skus数组里去找
+    const skuObj = props.goods.skus.find((item) => {
+      return item.id === skuIds[0];
+    });
+    
+
+    emits("change", skuObj);
+
+  }
+};
+const getPathMap = (goods) => {
+  const pathMap = {};
+  //1.生成有效sku数组
+  const effectiveSkus = goods.skus.filter((sku) => sku.inventory > 0);
+  //2.使用powerSet得到所以子集 [1,2] => [[1], [2], [1,2]]
+  effectiveSkus.forEach((sku) => {
+    //2.1获取可选的规格数组
+    const selectedValArr = sku.specs.map((val) => val.valueName);
+    //2.2获取可选数组的子集
+    const valueArrPowerSet = getPowerSet(selectedValArr);
+    //3.根据子集生成路径字典对象
+    //3.1遍历子集 往pathMap中插入数据
+    valueArrPowerSet.forEach((arr) => {
+      const key = arr.join("-");
+      //给pathMap设置数据
+      if (pathMap[key]) {
+        pathMap[key].push(sku.id);
+      } else {
+        pathMap[key] = [sku.id];
+      }
+    });
+  });
+  return pathMap;
+};
+//1.定义初始化函数
+const initDisabledState = (specs, pathMap) => {
+  specs.forEach((item) => {
+    item.values.forEach((val) => {
+      if (pathMap[val.name]) {
+        val.disabled = false;
+      } else {
+        val.disabled = true;
+      }
+    });
+  });
+};
+
+// 获取选中匹配数组 ['黑色',undefined,undefined]
+const getSelectedValues = (specs) => {
+  const arr = [];
+  specs.forEach((spec) => {
+    const selectedVal = spec.values.find((value) => value.selected);
+    arr.push(selectedVal ? selectedVal.name : undefined);
+  });
+
+  return arr;
+};
+
+const updateDisabledState = (specs, pathMap) => {
+  // 约定：每一个按钮的状态由自身的disabled进行控制
+  specs.forEach((item, i) => {
+    const selectedValues = getSelectedValues(specs);
+    item.values.forEach((val) => {
+      if (val.selected) return;
+      const _seletedValues = [...selectedValues];
+      _seletedValues[i] = val.name;
+      const key = _seletedValues.filter((value) => value).join("-");
+      // 路径字典中查找是否有数据 有-可以点击 没有-禁用
+      if (pathMap[key]) {
+        val.disabled = false;
+      } else {
+        val.disabled = true;
+      }
+    });
+  });
+};
+
+onMounted(() => {
+  pathMap = getPathMap(props.goods);
+  // console.log(pathMap);
+  initDisabledState(props.goods.specs, pathMap);
+});
+</script>
+
 <template>
   <div class="goods-sku">
-    <dl v-for="item in goods.specs" :key="item.id">
+    <dl
+      v-for="item in goods.specs"
+      :key="item.id"
+    >
       <dt>{{ item.name }}</dt>
       <dd>
-        <template v-for="val in item.values" :key="val.name">
-          <img :class="{ selected: val.selected, disabled: val.disabled }" @click="clickSpecs(item, val)"
-            v-if="val.picture" :src="val.picture" />
-          <span :class="{ selected: val.selected, disabled: val.disabled }" @click="clickSpecs(item, val)" v-else>{{
-              val.name
-          }}</span>
+        <template
+          v-for="val in item.values"
+          :key="val.name"
+        >
+          <!-- 图片类型规格 -->
+          <img
+            v-if="val.picture"
+            :src="val.picture"
+            :title="val.name"
+            :class="{selected: val.selected, disabled: val.disabled}"
+            @click="$event => changeSelectedStatus(item,val)"
+          >
+          <!-- 文字类型规格 -->
+          <span
+            v-else
+            :class="{selected:val.selected, disabled: val.disabled}"
+            @click="$event => changeSelectedStatus(item,val)"
+          >{{ val.name }}</span>
         </template>
       </dd>
     </dl>
   </div>
 </template>
-<script>
-import { watchEffect } from 'vue'
-import getPowerSet from './power-set'
-const spliter = '★'
-// 根据skus数据得到路径字典对象
-const getPathMap = (skus) => {
-  const pathMap = {}
-  if (skus && skus.length > 0) {
-    skus.forEach(sku => {
-      // 1. 过滤出有库存有效的sku
-      if (sku.inventory) {
-        // 2. 得到sku属性值数组
-        const specs = sku.specs.map(spec => spec.valueName)
-        // 3. 得到sku属性值数组的子集
-        const powerSet = getPowerSet(specs)
-        // 4. 设置给路径字典对象
-        powerSet.forEach(set => {
-          const key = set.join(spliter)
-          // 如果没有就先初始化一个空数组
-          if (!pathMap[key]) {
-            pathMap[key] = []
-          }
-          pathMap[key].push(sku.id)
-        })
-      }
-    })
-  }
-  return pathMap
-}
-
-// 初始化禁用状态
-function initDisabledStatus (specs, pathMap) {
-  if (specs && specs.length > 0) {
-    specs.forEach(spec => {
-      spec.values.forEach(val => {
-        // 设置禁用状态
-        val.disabled = !pathMap[val.name]
-      })
-    })
-  }
-}
-
-// 得到当前选中规格集合
-const getSelectedArr = (specs) => {
-  const selectedArr = []
-  specs.forEach((spec, index) => {
-    const selectedVal = spec.values.find(val => val.selected)
-    if (selectedVal) {
-      selectedArr[index] = selectedVal.name
-    } else {
-      selectedArr[index] = undefined
-    }
-  })
-  return selectedArr
-}
-
-// 更新按钮的禁用状态
-const updateDisabledStatus = (specs, pathMap) => {
-  // 遍历每一种规格
-  specs.forEach((item, i) => {
-    // 拿到当前选择的项目
-    const selectedArr = getSelectedArr(specs)
-    // 遍历每一个按钮
-    item.values.forEach(val => {
-      if (!val.selected) {
-        selectedArr[i] = val.name
-        // 去掉undefined之后组合成key
-        const key = selectedArr.filter(value => value).join(spliter)
-        val.disabled = !pathMap[key]
-      }
-    })
-  })
-}
-
-
-export default {
-  name: 'XtxGoodSku',
-  props: {
-    // specs:所有的规格信息  skus:所有的sku组合
-    goods: {
-      type: Object,
-      default: () => ({ specs: [], skus: [] })
-    }
-  },
-  emits: ['change'],
-  setup (props, { emit }) {
-    let pathMap = {}
-    watchEffect(() => {
-      // 得到所有字典集合
-      pathMap = getPathMap(props.goods.skus)
-      // 组件初始化的时候更新禁用状态
-      initDisabledStatus(props.goods.specs, pathMap)
-    })
-
-    const clickSpecs = (item, val) => {
-      if (val.disabled) return false
-      // 选中与取消选中逻辑
-      if (val.selected) {
-        val.selected = false
-      } else {
-        item.values.forEach(bv => { bv.selected = false })
-        val.selected = true
-      }
-      // 点击之后再次更新选中状态
-      updateDisabledStatus(props.goods.specs, pathMap)
-      // 把选择的sku信息传出去给父组件
-      // 触发change事件将sku数据传递出去
-      const selectedArr = getSelectedArr(props.goods.specs).filter(value => value)
-      // 如果选中得规格数量和传入得规格总数相等则传出完整信息(都选择了)
-      // 否则传出空对象
-      if (selectedArr.length === props.goods.specs.length) {
-        // 从路径字典中得到skuId
-        const skuId = pathMap[selectedArr.join(spliter)][0]
-        const sku = props.goods.skus.find(sku => sku.id === skuId)
-        // 传递数据给父组件
-        emit('change', {
-          skuId: sku.id,
-          price: sku.price,
-          oldPrice: sku.oldPrice,
-          inventory: sku.inventory,
-          specsText: sku.specs.reduce((p, n) => `${p} ${n.name}：${n.valueName}`, '').trim()
-        })
-      } else {
-        emit('change', {})
-      }
-    }
-    return { clickSpecs }
-  }
-}
-</script>
 
 <style scoped lang="scss">
 @mixin sku-state-mixin {
@@ -152,7 +156,7 @@ export default {
   cursor: pointer;
 
   &.selected {
-    border-color: $xtxColor;
+    border-color: #27ba9b;
   }
 
   &.disabled {
@@ -180,14 +184,14 @@ export default {
       flex: 1;
       color: #666;
 
-      >img {
+      > img {
         width: 50px;
         height: 50px;
         margin-bottom: 4px;
         @include sku-state-mixin;
       }
 
-      >span {
+      > span {
         display: inline-block;
         height: 30px;
         line-height: 28px;
