@@ -1,18 +1,23 @@
 <script setup>
-import { getOrderAPI } from "@/apis/pay";
+import { getOrderAPI, payMockAPI } from "@/apis/pay";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useCountDown } from "@/components/useCountDown";
+import router from "@/router";
 const countDown = useCountDown();
 // const {start,formatTime} = useCountDown()
 
 const route = useRoute();
 const payInfo = ref({});
+const show = ref(false)
+
 const getPayInfo = async () => {
+  show.value = false
   const res = await getOrderAPI(route.query.id);
   payInfo.value = res.result;
   //初始化倒计时秒数
-  countDown.start(res.result.countdown);
+  countDown.start(payInfo.value.countdown);
+  show.value = true
 };
 onMounted(() => getPayInfo());
 
@@ -23,13 +28,24 @@ const baseURL = "http://pcapi-xiaotuxian-front-devtest.itheima.net/";
 const backURL = "http://localhost:5173/paycallback";
 const redirectUrl = encodeURIComponent(backURL);
 const payUrl = `${baseURL}pay/aliPay?orderId=${route.query.id}&redirect=${redirectUrl}`;
-</script>
 
+//模拟支付
+const payMock = async () => {
+  const res = await payMockAPI(route.query.id);
+  console.log(res);
+  router.push({
+    path: '/paycallback',
+    query: {
+      id: route.query.id
+    }
+  })
+}
+</script>
 
 <template>
 
   <div class="xtx-pay-page">
-    <div class="container">
+    <div class="container" v-show="show">
       <!-- 付款信息 -->
       <div class="pay-info">
         <span class="icon iconfont icon-queren2"></span>
@@ -47,40 +63,21 @@ const payUrl = `${baseURL}pay/aliPay?orderId=${route.query.id}&redirect=${redire
         <p class="head">选择以下支付方式付款</p>
         <div class="item">
           <p>支付平台</p>
-          <a
-            class="btn wx"
-            href="javascript:;"
-          ></a>
-          <a
-            class="btn alipay"
-            :href="payUrl"
-          ></a>
+          <a class="btn alipay" :href="payUrl"></a>
+          <a class="btn wx disabled"></a>
+          <a class="btn mock" @click="payMock">模拟支付</a>
         </div>
         <div class="item">
           <p>支付方式</p>
-          <a
-            class="btn"
-            href="javascript:;"
-          >招商银行</a>
-          <a
-            class="btn"
-            href="javascript:;"
-          >工商银行</a>
-          <a
-            class="btn"
-            href="javascript:;"
-          >建设银行</a>
-          <a
-            class="btn"
-            href="javascript:;"
-          >农业银行</a>
-          <a
-            class="btn"
-            href="javascript:;"
-          >交通银行</a>
+          <a class="btn disabled">招商银行</a>
+          <a class="btn disabled">工商银行</a>
+          <a class="btn disabled">建设银行</a>
+          <a class="btn disabled">农业银行</a>
+          <a class="btn disabled">交通银行</a>
         </div>
       </div>
     </div>
+    <XtxLoading v-show="!show"></XtxLoading>
   </div>
 </template>
 
@@ -165,13 +162,22 @@ const payUrl = `${baseURL}pay/aliPay?orderId=${route.query.id}&redirect=${redire
     }
 
     &.alipay {
-      background: url(https://cdn.cnbj1.fds.api.mi-img.com/mi-mall/7b6b02396368c9314528c0bbd85a2e06.png)
-        no-repeat center / contain;
+      background: url(https://cdn.cnbj1.fds.api.mi-img.com/mi-mall/7b6b02396368c9314528c0bbd85a2e06.png) no-repeat center / contain;
     }
 
     &.wx {
-      background: url(https://cdn.cnbj1.fds.api.mi-img.com/mi-mall/c66f98cff8649bd5ba722c2e8067c6ca.jpg)
-        no-repeat center / contain;
+      background: url(https://cdn.cnbj1.fds.api.mi-img.com/mi-mall/c66f98cff8649bd5ba722c2e8067c6ca.jpg) no-repeat center / contain;
+    }
+    &.mock{
+      position: relative;
+      top:-20px
+    }
+
+    &.disabled {
+      opacity: 0.3;
+      border-color: #f5f5f5;
+      background-color: #F0F0F0;
+      cursor: not-allowed;
     }
   }
 }

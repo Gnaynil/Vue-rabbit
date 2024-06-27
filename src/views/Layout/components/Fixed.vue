@@ -1,30 +1,31 @@
 <script setup>
 //vue-Use
 import { useScroll } from '@vueuse/core'
-import{useCategoryStore} from "@/stores/category"
+import { useCategoryStore } from "@/stores/category"
+import HeaderCart from "./HeaderCart.vue";
 
-const {y} = useScroll(window)
+const { y } = useScroll(window)
 const categoryStore = useCategoryStore()
 </script>
 
 <template>
-  <div class="app-header-sticky" :class="{show: y > 78}" >
+  <div class="app-header-sticky" :class="{ show: y > 78 }">
     <div class="container">
       <RouterLink class="logo" to="/" />
       <!-- 导航区域 -->
       <ul class="app-header-nav ">
-        <li
-          class="home"
-          v-for="item in categoryStore.categoryList"
-          :key="item.id"
-        >
+        <li class="home" v-for="item in categoryStore.categoryList" :key="item.id">
           <RouterLink active-class="active" :to="`/category/${item.id}`">{{ item.name }}</RouterLink>
         </li>
       </ul>
 
       <div class="right">
-        <RouterLink to="/">品牌</RouterLink>
-        <RouterLink to="/">专题</RouterLink>
+        <div class="search">
+          <i class="iconfont icon-search"></i>
+          <input type="text" placeholder="搜一搜">
+        </div>
+        <!-- 头部购物车 -->
+        <HeaderCart />
       </div>
     </div>
   </div>
@@ -69,24 +70,41 @@ const categoryStore = useCategoryStore()
     width: 220px;
     display: flex;
     text-align: center;
-    padding-left: 40px;
+    padding-left: 20px;
     border-left: 2px solid $xtxColor;
 
-    a {
-      width: 38px;
-      margin-right: 40px;
-      font-size: 16px;
-      line-height: 1;
+    // a {
+    //   width: 38px;
+    //   margin-right: 40px;
+    //   font-size: 16px;
+    //   line-height: 1;
 
-      &:hover {
-        color: $xtxColor;
+    //   &:hover {
+    //     color: $xtxColor;
+    //   }
+    // }
+    .search {
+      width: 170px;
+      height: 32px;
+      position: relative;
+      border-bottom: 1px solid #e7e7e7;
+      line-height: 32px;
+
+      .icon-search {
+        font-size: 18px;
+        margin-left: 5px;
+      }
+
+      input {
+        width: 110px;
+        padding-left: 5px;
       }
     }
   }
 }
 
 .app-header-nav {
-  width: 820px;
+  width: 800px;
   display: flex;
   padding-left: 40px;
   position: relative;

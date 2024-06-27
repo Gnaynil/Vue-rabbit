@@ -37,3 +37,10 @@ export const mergeCartAPI = (data) => {
     data
   })
 }
+export const changeCartAPI = (id,data)=>{
+  return httpInstance({
+    url:`/member/cart/${id}`,
+    method:'PUT',
+    data
+  })
+}

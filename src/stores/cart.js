@@ -4,12 +4,11 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { computed } from 'vue';
 import { useUserStore } from './user';
-import { insertCartAPI, findNewCartListAPI, delCartAPI } from '@/apis/cart.js'
+import { insertCartAPI, findNewCartListAPI, delCartAPI, changeCartAPI } from '@/apis/cart.js'
 
 export const useCartStore = defineStore('cart', () => {
   const userStore = useUserStore()
   const isLogin = computed(() => userStore.userInfo.token)
-
 
   // 1. 定义state - cartList
   const cartList = ref([])
@@ -48,21 +47,36 @@ export const useCartStore = defineStore('cart', () => {
   //删除购物车
   const delCart = async (skuId) => {
     if (isLogin.value) {
-      //登录之后加入购物车逻辑
-      console.log('登录了');
+      //数据库删除
+      //登录之后删除购物车逻辑
       await delCartAPI([skuId])
       updateNewList()
     }
     //思路:
     //1.找到要删除项的下标值 -splice
     //2.使用数组的过滤方法
+    //本地删除
     const idx = cartList.value.findIndex((item) => skuId === item.skuId)
     cartList.value.splice(idx, 1)
   }
+  //修改购物车单品
+  const changeCart = async () => {
+    cartList.value.forEach(async (item) => {
+      //判断改变了的单品,修改数据库
+      if (item.change) {
+        await changeCartAPI(item.skuId, item)
+      }
+    })
+    setTimeout(() => {
+      updateNewList()
+    }, 1000)
+
+
+  }
 
   //登出后清楚购物车
-  const clearCart = ()=>{
-    cartList.value=[]
+  const clearCart = () => {
+    cartList.value = []
   }
 
 
@@ -71,13 +85,19 @@ export const useCartStore = defineStore('cart', () => {
     //通过skuId找到要修改的那一项,然后把它的selected修改为传过来的selected
     const item = cartList.value.find((item) => { return item.skuId === skuId })
     item.selected = selected
+    console.log(item.selected, 'singleCheck');
+    //单品已改变
+    item.change = true
   }
   // 全选功能action
   const allCheck = (selected) => {
     // 把cartList中的每一项的selected都设置为当前的全选框状态
-    cartList.value.forEach(item => item.selected = selected)
+    cartList.value.forEach(item => {
+      item.selected = selected
+      //单品已改变
+      item.change = true
+    })
   }
-
 
   // 是否全选计算属性
   const isAll = computed(() => cartList.value.every((item) => item.selected))
@@ -95,6 +115,7 @@ export const useCartStore = defineStore('cart', () => {
     cartList,
     addCart,
     delCart,
+    changeCart,
     allCount,
     allPrice,
     singleCheck,
@@ -103,7 +124,7 @@ export const useCartStore = defineStore('cart', () => {
     selectedCount,
     selectedPrice,
     clearCart,
-    updateNewList
+    updateNewList,
   }
 }, {
   persist: true,

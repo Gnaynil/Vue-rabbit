@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref,computed } from "vue";
+import { onMounted, ref,computed, onUpdated } from "vue";
 import { fetchHotGoodsAPI } from "@/apis/goods.js";
 import { useRoute } from "vue-router";
 
@@ -36,7 +36,8 @@ onMounted(()=>{getHotList()})
     <h3>{{title}}</h3>
     <!-- 商品区块 -->
     <RouterLink
-      to="/"
+      :to="`/detail/${item.id}`"
+      :replace="true"
       class="goods-item"
       v-for="item in goodList"
       :key="item.id"

@@ -3,32 +3,25 @@ import { useCategoryStore } from '@/stores/category';
 // import GoodsItem from "./GoodsItem.vue";
 
 const categoryStore = useCategoryStore()
-
+defineProps({
+  onHover: Function
+})
 </script>
 
 <template>
   <div class="home-category">
     <ul class="menu">
-      <li
-        v-for="item in categoryStore.categoryList"
-        :key="item.id"
-      >
-        <RouterLink :to="`/category/${item.id}`">{{item.name}}</RouterLink>
-        <RouterLink
-          v-for="i in item.children.slice(0,2)"
-          :key="i.id"
-          :to="`/category/${item.id}`"
-        >{{ i.name }}</RouterLink>
+      <li v-for="item in categoryStore.categoryList" :key="item.id" @mouseenter="onHover" @mouseleave="onHover">
+        <RouterLink :to="`/category/${item.id}`">{{ item.name }}</RouterLink>
+        <RouterLink v-for="i in item.children.slice(0, 2)" :key="i.id" :to="`/category/${item.id}`">{{ i.name }}
+        </RouterLink>
         <!-- 弹层layer位置 -->
         <div class="layer">
           <h4>分类推荐 <small>根据您的购买或浏览记录推荐</small></h4>
           <ul>
-            <li
-              v-for="i in item.goods"
-              :key="i.id"
-            >  
-            <!-- <GoodsItem :goods = "i"/> -->
-              <RouterLink to="/">
+            <li v-for="i in item.goods" :key="i.id">
+              <!-- <GoodsItem :goods = "i"/> -->
+              <RouterLink :to="`/detail/${i.id}`">
                 <img :src="i.picture" alt="" />
                 <div class="info">
                   <p class="name ellipsis-2">

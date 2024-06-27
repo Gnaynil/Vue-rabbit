@@ -27,12 +27,12 @@ onMounted(() => {
         <div class="box">
           <RouterLink
             class="cover"
-            to="/"
+            :to="`/category/${cate.id}`"
           >
             <img v-img-lazy="cate.picture" />
             <strong class="label">
               <span>{{ cate.name }}馆</span>
-              <span>{{ cate.saleInfo }}</span>
+              <span class="ellipsis">{{ cate.saleInfo }}</span>
             </strong>
           </RouterLink>
           <ul class="goods-list">

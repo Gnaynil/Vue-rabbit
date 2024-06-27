@@ -3,6 +3,10 @@ import { getCheckoutInfoAPI, createOrderAPI } from "@/apis/checkout";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useCartStore } from "@/stores/cart.js";
+import { addAddressAPI } from '@/apis/address.js'
+//获取地区级联
+import { regionData, codeToText } from 'element-china-area-data'
+import { ElMessage } from "element-plus";
 const cartStore = useCartStore();
 
 const router = useRouter()
@@ -19,8 +23,21 @@ const getCheckInfo = async () => {
   curAddress.value = item;
 };
 onMounted(() => getCheckInfo());
+//表单规则
+const rules = {
+  receiver: {
+    required: true, message: '请输入收货人姓名'
+  },
+  contact: [
+    { required: true, message: '请输入联系方式' },
+    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' },
+  ],
+  countyCode: [{ required: true, message: '请选择所在地区' }],
+  address: [{ required: true, message: '请输入详细地址' }],
+}
+
 //控制弹框打开
-const showDialog = ref(false);
+const showSwitchDialog = ref(false);
 //切换地址
 const activeAddress = ref([]);
 const switchAddress = (item) => {
@@ -28,14 +45,48 @@ const switchAddress = (item) => {
 };
 const confirm = () => {
   curAddress.value = activeAddress.value;
-  showDialog.value = false;
+  showSwitchDialog.value = false;
 };
+//添加地址
+const showAddDialog = ref(false)
+const form = ref({
+  receiver: '', // 收货人
+  contact: '', // 联系方式
+  fullLocation: '', // 省市区(前端展示)
+  provinceCode: '', // 省份编码(后端参数)
+  cityCode: '', // 城市编码(后端参数)
+  countyCode: '', // 区/县编码(后端参数)
+  address: '', // 详细地址
+  isDefault: 0, // 默认地址，1为是，0为否
+})
+//表单组件实例
+const formRef = ref()
+const addAddress = async () => {
+  try {
+    await formRef.value.validate()
+    await addAddressAPI(form.value)
+    ElMessage.success('添加成功')
+    showAddDialog.value = false
+    getCheckInfo()
+  } catch (e) {
+    ElMessage.error('请填写完整信息')
+  }
+
+}
+const regionChange = (e) => {
+  e.forEach((v) => {
+    form.value.fullLocation += codeToText[v] + ' '
+  })
+  form.value.provinceCode = e[0] + '0000'
+  form.value.cityCode = e[1] + '00'
+  form.value.countyCode = e[2]
+}
 
 //提交订单
 const creteOrder = async () => {
   const res = await createOrderAPI({
-    deliveryTimeType: 1,
-    payType: 1,
+    deliveryTimeType: activeDelivery.value,
+    payType: activePay.value,
     payChannel: 1,
     buyerMessage: "",
     goods: checkInfo.value.goods.map((item) => {
@@ -47,15 +98,36 @@ const creteOrder = async () => {
     addressId: curAddress.value.id,
   });
   const orderId = res.result.id
-  router.push({
-    path:'/pay',
-    query:{
-      id:orderId
-    }
-  })
+  if (activePay.value === 2) {
+    console.log('货到付款');
+    ElMessage.success('订单提交成功')
+    setTimeout(() => {
+      router.push('/member/order')
+    }, 1000)
+  }
+  else {
+    router.push({
+      path: '/pay',
+      query: {
+        id: orderId
+      }
+    })
+  }
   //更新购物车
   cartStore.updateNewList()
 };
+const activeDelivery = ref(1)
+const deliveryList = [
+  { active: 1, name: '不限送货时间：周一至周日' },
+  { active: 2, name: '工作日送货：周一至周五' },
+  { active: 3, name: '双休日、假日送货：周六至周日' },
+]
+const activePay = ref(1)
+
+const PayTypeList = [
+  { active: 1, name: '在线支付' },
+  { active: 2, name: '货到付款' },
+]
 </script>
 
 <template>
@@ -67,10 +139,7 @@ const creteOrder = async () => {
         <div class="box-body">
           <div class="address">
             <div class="text">
-              <div
-                class="none"
-                v-if="!curAddress"
-              >您需要先添加收货地址才可提交订单。</div>
+              <div class="none" v-if="!curAddress">您需要先添加收货地址才可提交订单。</div>
               <ul v-else>
                 <li><span>收<i />货<i />人：</span>{{ curAddress.receiver }}</li>
                 <li><span>联系方式：</span>{{ curAddress.contact }}</li>
@@ -78,14 +147,8 @@ const creteOrder = async () => {
               </ul>
             </div>
             <div class="action">
-              <el-button
-                size="large"
-                @click="showDialog = true"
-              >切换地址</el-button>
-              <el-button
-                size="large"
-                @click="addFlag = true"
-              >添加地址</el-button>
+              <el-button size="large" @click="showSwitchDialog = true">切换地址</el-button>
+              <el-button size="large" @click="showAddDialog = true">添加地址</el-button>
             </div>
           </div>
         </div>
@@ -103,19 +166,10 @@ const creteOrder = async () => {
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="i in checkInfo.goods"
-                :key="i.id"
-              >
+              <tr v-for="i in checkInfo.goods" :key="i.id">
                 <td>
-                  <a
-                    href="javascript:;"
-                    class="info"
-                  >
-                    <img
-                      :src="i.picture"
-                      alt=""
-                    >
+                  <a :href="`/detail/${i.id}`" class="info">
+                    <img :src="i.picture" alt="">
                     <div class="right">
                       <p>{{ i.name }}</p>
                       <p>{{ i.attrsText }}</p>
@@ -123,7 +177,7 @@ const creteOrder = async () => {
                   </a>
                 </td>
                 <td>&yen;{{ i.price }}</td>
-                <td>{{ i.price }}</td>
+                <td>{{ i.count }}</td>
                 <td>&yen;{{ i.totalPrice }}</td>
                 <td>&yen;{{ i.totalPayPrice }}</td>
               </tr>
@@ -132,32 +186,20 @@ const creteOrder = async () => {
         </div>
         <!-- 配送时间 -->
         <h3 class="box-title">配送时间</h3>
-        <div class="box-body">
-          <a
-            class="my-btn active"
-            href="javascript:;"
-          >不限送货时间：周一至周日</a>
-          <a
-            class="my-btn"
-            href="javascript:;"
-          >工作日送货：周一至周五</a>
-          <a
-            class="my-btn"
-            href="javascript:;"
-          >双休日、假日送货：周六至周日</a>
+        <div class="box-body box-content">
+          <a class="my-btn" v-for="(item, index) in deliveryList" :key="deliveryList[index].active"
+            :class="{ active: activeDelivery === deliveryList[index].active }" @click="() => {
+              activeDelivery = deliveryList[index].active
+            }">{{ item.name }}</a>
         </div>
         <!-- 支付方式 -->
         <h3 class="box-title">支付方式</h3>
-        <div class="box-body">
-          <a
-            class="my-btn active"
-            href="javascript:;"
-          >在线支付</a>
-          <a
-            class="my-btn"
-            href="javascript:;"
-          >货到付款</a>
-          <span style="color:#999">货到付款需付5元手续费</span>
+        <div class="box-body box-content">
+          <a class="my-btn" v-for="(item, index) in PayTypeList" :key="PayTypeList[index].active"
+            :class="{ active: activePay === PayTypeList[index].active }" @click="() => {
+              activePay = PayTypeList[index].active
+            }">{{ item.name }}</a>
+          <span style="color:#999;height: 45px;line-height: 45px;">货到付款需付5元手续费</span>
         </div>
         <!-- 金额明细 -->
         <h3 class="box-title">金额明细</h3>
@@ -183,30 +225,16 @@ const creteOrder = async () => {
         </div>
         <!-- 提交订单 -->
         <div class="submit">
-          <el-button
-            type="primary"
-            size="large"
-            @click="creteOrder"
-          >提交订单</el-button>
+          <el-button type="primary" size="large" @click="creteOrder">提交订单</el-button>
         </div>
       </div>
     </div>
   </div>
   <!-- 切换地址 -->
-  <el-dialog
-    title="切换收货地址"
-    width="30%"
-    center
-    v-model="showDialog"
-  >
+  <el-dialog title="切换收货地址" width="40%" center v-model="showSwitchDialog">
     <div class="addressWrapper">
-      <div
-        class="text item "
-        :class="{active:activeAddress.id===item.id}"
-        @click="switchAddress(item)"
-        v-for="item in checkInfo.userAddresses"
-        :key="item.id"
-      >
+      <div class="text item " :class="{ active: activeAddress.id === item.id }" @click="switchAddress(item)"
+        v-for="item in checkInfo.userAddresses" :key="item.id">
         <ul>
           <li><span>收<i />货<i />人：</span>{{ item.receiver }} </li>
           <li><span>联系方式：</span>{{ item.contact }}</li>
@@ -216,15 +244,40 @@ const creteOrder = async () => {
     </div>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="()=>showDialog=false">取消</el-button>
-        <el-button
-          type="primary"
-          @click="confirm"
-        >确定</el-button>
+        <el-button @click="() => showSwitchDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirm">确定</el-button>
       </span>
     </template>
   </el-dialog>
   <!-- 添加地址 -->
+  <el-dialog title="添加收货地址" width="40%" center v-model="showAddDialog">
+    <div class="addressWrapper">
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="auto" style="max-width: 600px">
+        <el-form-item label="收货人" prop="receiver">
+          <el-input v-model="form.receiver" />
+        </el-form-item>
+        <el-form-item label="联系方式" prop="contact">
+          <el-input v-model="form.contact" />
+        </el-form-item>
+        <el-form-item label="所在地区" prop="countyCode">
+          <el-cascader size="large" v-model="form.countyCode" :options="regionData" @change="regionChange"
+            placeholder="请选择省/市/区(县)" />
+        </el-form-item>
+        <el-form-item label="详细地址" prop="address">
+          <el-input v-model="form.address" type="textarea" />
+        </el-form-item>
+        <el-form-item label="设为默认地址">
+          <el-switch v-model="form.isDefault" active-value="0" inactive-value="1" />
+        </el-form-item>
+      </el-form>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="showAddDialog = false">取消</el-button>
+        <el-button type="primary" @click="addAddress">确定</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped lang="scss">
@@ -267,7 +320,7 @@ const creteOrder = async () => {
       width: 100%;
     }
 
-    > ul {
+    >ul {
       flex: 1;
       padding: 20px;
 
@@ -278,7 +331,7 @@ const creteOrder = async () => {
           color: #999;
           margin-right: 5px;
 
-          > i {
+          >i {
             width: 0.5em;
             display: inline-block;
           }
@@ -286,7 +339,7 @@ const creteOrder = async () => {
       }
     }
 
-    > a {
+    >a {
       color: $xtxColor;
       width: 160px;
       text-align: center;
@@ -310,6 +363,7 @@ const creteOrder = async () => {
         margin-right: 10px;
       }
     }
+
   }
 }
 
@@ -362,21 +416,34 @@ const creteOrder = async () => {
   }
 }
 
-.my-btn {
-  width: 228px;
-  height: 50px;
-  border: 1px solid #e4e4e4;
-  text-align: center;
-  line-height: 48px;
-  margin-right: 25px;
-  color: #666666;
-  display: inline-block;
+.box-content {
+  display: flex;
 
-  &.active,
-  &:hover {
-    border-color: $xtxColor;
+
+  .my-btn {
+    width: 228px;
+    height: 50px;
+    border: 1px solid #e4e4e4;
+    text-align: center;
+    line-height: 48px;
+    margin-right: 25px;
+    color: #666666;
+    // display: inline-block;
+
+    &.active,
+    &:hover {
+      border-color: $xtxColor;
+    }
+
+    &.disabled {
+      opacity: 0.6;
+      border-color: #f5f5f5;
+      background-color: #F0F0F0;
+      cursor: not-allowed;
+    }
   }
 }
+
 
 .total {
   dl {
@@ -432,7 +499,7 @@ const creteOrder = async () => {
       background: lighten($xtxColor, 50%);
     }
 
-    > ul {
+    >ul {
       padding: 10px;
       font-size: 14px;
       line-height: 30px;

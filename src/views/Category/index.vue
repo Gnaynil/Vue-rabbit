@@ -1,14 +1,14 @@
 <script setup>
 import GoodsItem from "../Home/components/GoodsItem.vue";
-import {useCategory} from './composables/useCategory.js'
-import {useBanner} from './composables/useBanner.js'
+import { useCategory } from './composables/useCategory.js'
+import { useBanner } from './composables/useBanner.js'
 
 //获取数据
-const {categoryData} = useCategory()
+const { categoryData } = useCategory()
 
 
 //获取banner
-const {bannerList} = useBanner()
+const { bannerList } = useBanner()
 </script>
 
 <template>
@@ -18,21 +18,15 @@ const {bannerList} = useBanner()
       <div class="bread-container">
         <el-breadcrumb separator=">">
           <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item>{{categoryData.name}}</el-breadcrumb-item>
+          <el-breadcrumb-item>{{ categoryData.name }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
     </div>
     <!-- 轮播图 -->
     <div class="home-banner">
       <el-carousel height="500px">
-        <el-carousel-item
-          v-for="item in bannerList"
-          :key="item.id"
-        >
-          <img
-            :src="item.imgUrl"
-            alt=""
-          >
+        <el-carousel-item v-for="item in bannerList" :key="item.id">
+          <a :href="item.hrefUrl"><img :src="item.imgUrl" alt=""></a>
         </el-carousel-item>
       </el-carousel>
     </div>
@@ -40,10 +34,7 @@ const {bannerList} = useBanner()
     <div class="sub-list">
       <h3>全部分类</h3>
       <ul>
-        <li
-          v-for="i in categoryData.children"
-          :key="i.id"
-        >
+        <li v-for="i in categoryData.children" :key="i.id">
           <RouterLink :to="`/category/sub/${i.id}`">
             <img :src="i.picture" />
             <p>{{ i.name }}</p>
@@ -51,20 +42,12 @@ const {bannerList} = useBanner()
         </li>
       </ul>
     </div>
-    <div
-      class="ref-goods"
-      v-for="item in categoryData.children"
-      :key="item.id"
-    >
+    <div class="ref-goods" v-for="item in categoryData.children" :key="item.id">
       <div class="head">
         <h3>- {{ item.name }}-</h3>
       </div>
       <div class="body">
-        <GoodsItem
-          v-for="good in item.goods"
-          :goods="good"
-          :key="good.id"
-        />
+        <GoodsItem v-for="good in item.goods" :goods="good" :key="good.id" />
       </div>
     </div>
   </div>
@@ -88,6 +71,7 @@ const {bannerList} = useBanner()
     ul {
       display: flex;
       padding: 0 32px;
+      justify-content: space-between;
       flex-wrap: wrap;
 
       li {
@@ -148,6 +132,7 @@ const {bannerList} = useBanner()
     padding: 25px 0;
   }
 }
+
 .home-banner {
   width: 1240px;
   height: 500px;

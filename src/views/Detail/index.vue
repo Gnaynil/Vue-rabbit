@@ -1,56 +1,52 @@
 <script setup>
 import { getDetail } from "@/apis/goods";
 import { ElMessage } from "element-plus";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import DetailHot from "./components/DetailHot.vue";
 import { useCartStore } from "@/stores/cart.js";
-// import axios from 'axios'
-
 const goods = ref([]);
-// const skusData = ref([])
 const route = useRoute();
-
+const show = ref(false)
 const getGoods = async () => {
+  show.value = false
   const res = await getDetail(route.params.id);
   goods.value = res.result;
+  show.value = true
 };
-// const getSkusData = async () => {
-//   const res = await axios.get('http://localhost:3000/result')
-//   // const res = await axios.get('http://pcapi-xiaotuxian-front-devtest.itheima.net/goods?id=1135076')
-//   skusData.value = res.data;
-// };
-
 onMounted(() => {
   getGoods();
-  // getSkusData()
 });
+//监听路由变化重新获取页面参数
+watch(() => route.params.id, () => {
+  getGoods();
+})
 //sku规格被操作时
 let skuObj = ref({})
 const skuChange = (sku) => {
   skuObj.value = sku
-  console.log(skuObj.value,'1111');
 };
 
-const count =  ref(1);
+const count = ref(1);
 
 const cartStore = useCartStore()
 //添加购物车
-const addCart = () =>{
-  if(skuObj.value.id){
+const addCart = () => {
+  if (skuObj.value.id) {
     //规格已经选择
     cartStore.addCart({
-      id:goods.value.id,
-      name:goods.value.name,
-      picture:goods.value.mainPictures[0],
-      price:goods.value.price,
-      count:count.value,
-      skuId:skuObj.value.id,
-      attrsText:skuObj.value.specs.reduce((p, n) => `${p} ${n.name}：${n.valueName}`, '').trim(),
-      selected:true
+      id: goods.value.id,
+      name: goods.value.name,
+      picture: goods.value.mainPictures[0],
+      price: goods.value.price,
+      count: count.value,
+      skuId: skuObj.value.id,
+      attrsText: skuObj.value.specs.reduce((p, n) => `${p} ${n.name}：${n.valueName}`, '').trim(),
+      selected: true
     })
+    ElMessage.success('加入购物车成功')
   }
-  else{
+  else {
     //规格没有选择
     ElMessage.warning('请选择规格')
   }
@@ -59,11 +55,8 @@ const addCart = () =>{
 </script>
 
 <template>
-  <div class="xtx-goods-page">
-    <div
-      class="container"
-      v-if="goods.details"
-    >
+  <div class="xtx-goods-page" v-show="show">
+    <div class="container" v-if="goods.details">
       <!-- <div class="container"> -->
       <div class="bread-container">
         <el-breadcrumb separator=">">
@@ -73,13 +66,13 @@ const addCart = () =>{
             1. 可选链的语法?. 
             2. v-if手动控制渲染时机 保证只有数据存在才渲染
            -->
-          <el-breadcrumb-item :to="{ path: `/category/${goods.categories[1].id}` }">{{goods.categories[1].name}}
+          <el-breadcrumb-item :to="{ path: `/category/${goods.categories[1].id}` }">{{ goods.categories[1].name }}
             <!-- <el-breadcrumb-item :to="{ path: `/category/${goods?.categories?.[1].id}` }">{{goods.categories?.[1].name}} -->
           </el-breadcrumb-item>
-          <el-breadcrumb-item :to="{ path: `/category/${goods.categories[0].id}` }">{{goods.categories[0].name}}
+          <el-breadcrumb-item :to="{ path: `/category/sub/${goods.categories[0].id}` }">{{ goods.categories[0].name }}
             <!-- <el-breadcrumb-item :to="{ path: `/category/${goods.categories?.[0]?.id}` }">{{goods.categories?.[0].name}} -->
           </el-breadcrumb-item>
-          <el-breadcrumb-item>抓绒保暖，毛毛虫子儿童运动鞋</el-breadcrumb-item>
+          <el-breadcrumb-item>{{ goods.name }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
       <!-- 商品信息 -->
@@ -106,11 +99,11 @@ const addCart = () =>{
                   <p> {{ goods.collectCount }}</p>
                   <p><i class="iconfont icon-favorite-filling"></i>收藏商品</p>
                 </li>
-                <li>
+                <!-- <li>
                   <p>品牌信息</p>
                   <p>{{ goods.brand.name }}</p>
                   <p><i class="iconfont icon-dynamic-filling"></i>品牌主页</p>
-                </li>
+                </li> -->
               </ul>
             </div>
             <div class="spec">
@@ -118,8 +111,8 @@ const addCart = () =>{
               <p class="g-name"> {{ goods.name }} </p>
               <p class="g-desc">{{ goods.desc }} </p>
               <p class="g-price">
-                <span>{{ goods.oldPrice }}</span>
-                <span> {{ goods.price }}</span>
+                <span>{{ goods.price }}</span>
+                <span> {{ goods.oldPrice }}</span>
               </p>
               <div class="g-service">
                 <dl>
@@ -137,23 +130,12 @@ const addCart = () =>{
                 </dl>
               </div>
               <!-- sku组件 -->
-              <XtxSku
-                :goods="goods"
-                @change="skuChange"
-              />
+              <XtxSku :goods="goods" @change="skuChange" />
               <!-- 数据组件 -->
-              <el-input-number
-                v-model="count"
-                :min="1"
-                :max="10"
-              />
+              <el-input-number v-model="count" :min="1" :max="10" />
               <!-- 按钮组件 -->
               <div>
-                <el-button
-                  size="large"
-                  class="btn"
-                  @click="addCart"
-                >
+                <el-button size="large" class="btn" @click="addCart">
                   加入购物车
                 </el-button>
               </div>
@@ -170,21 +152,13 @@ const addCart = () =>{
                 <div class="goods-detail">
                   <!-- 属性 -->
                   <ul class="attrs">
-                    <li
-                      v-for="item in goods.details.properties"
-                      :key="item.value"
-                    >
+                    <li v-for="item in goods.details.properties" :key="item.value">
                       <span class="dt">{{ item.name }}</span>
                       <span class="dd">{{ item.value }}</span>
                     </li>
                   </ul>
                   <!-- 图片 -->
-                  <img
-                    v-for="img in goods.details.pictures"
-                    v-img-lazy="img"
-                    :key="img"
-                    alt=""
-                  >
+                  <img v-for="img in goods.details.pictures" v-img-lazy="img" :key="img" alt="">
                 </div>
               </div>
             </div>
@@ -200,6 +174,7 @@ const addCart = () =>{
       </div>
     </div>
   </div>
+  <XtxLoading v-show="!show" />
 </template>
 
 
@@ -340,7 +315,7 @@ const addCart = () =>{
       flex: 1;
       position: relative;
 
-      ~ li::after {
+      ~li::after {
         position: absolute;
         top: 10px;
         left: 0;
@@ -394,7 +369,7 @@ const addCart = () =>{
       font-size: 18px;
       position: relative;
 
-      > span {
+      >span {
         color: $priceColor;
         font-size: 16px;
         margin-left: 10px;
@@ -428,7 +403,7 @@ const addCart = () =>{
     }
   }
 
-  > img {
+  >img {
     width: 100%;
   }
 }

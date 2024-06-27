@@ -10,9 +10,9 @@ import { ref } from "vue";
 const userStore = useUserStore()
 
 const form = ref({
-  account: "",
-  password: "",
-  agree: false,
+  account: "12056258291",
+  password: "hm#qd@23!",
+  agree: true,
 });
 
 //规则数据对象
@@ -42,12 +42,12 @@ const doLogin = () => {
     // console.log(valid);
     if (valid) {
       //TODO LOGIN
-      await userStore.getUserInfo({account,password})
+      await userStore.getUserInfo({ account, password })
       // if (res) {
-        // 1.提示用户
-        ElMessage({ type: "success", message: "登录成功" });
-        //2.跳转首页
-        router.replace({path:'/'})
+      // 1.提示用户
+      ElMessage({ type: "success", message: "登录成功" });
+      //2.跳转首页
+      router.replace({ path: '/' })
       // }
     }
   });
@@ -62,10 +62,7 @@ const doLogin = () => {
         <h1 class="logo">
           <RouterLink to="/">小兔鲜</RouterLink>
         </h1>
-        <RouterLink
-          class="entry"
-          to="/"
-        >
+        <RouterLink class="entry" to="/">
           进入网站首页
           <i class="iconfont icon-angle-right"></i>
           <i class="iconfont icon-angle-right"></i>
@@ -79,42 +76,19 @@ const doLogin = () => {
         </nav>
         <div class="account-box">
           <div class="form">
-            <el-form
-              ref="formRef"
-              label-position="right"
-              label-width="60px"
-              status-icon
-              :model="form"
-              :rules="rules"
-            >
-              <el-form-item
-                label="账户"
-                prop="account"
-              >
+            <el-form ref="formRef" label-position="right" label-width="60px" status-icon :model="form" :rules="rules">
+              <el-form-item label="账户" prop="account">
                 <el-input v-model="form.account" />
               </el-form-item>
-              <el-form-item
-                label="密码"
-                prop="password"
-              >
-                <el-input v-model="form.password" />
+              <el-form-item label="密码" prop="password" >
+                <el-input v-model="form.password" type="password" show-password/>
               </el-form-item>
-              <el-form-item
-                label-width="22px"
-                prop="agree"
-              >
-                <el-checkbox
-                  size="large"
-                  v-model="form.agree"
-                >
+              <el-form-item label-width="22px" prop="agree">
+                <el-checkbox size="large" v-model="form.agree">
                   我已同意隐私条款和服务条款
                 </el-checkbox>
               </el-form-item>
-              <el-button
-                size="large"
-                class="subBtn"
-                @click="doLogin"
-              >点击登录</el-button>
+              <el-button size="large" class="subBtn" @click="doLogin">点击登录</el-button>
             </el-form>
           </div>
         </div>
@@ -157,8 +131,7 @@ const doLogin = () => {
       height: 132px;
       width: 100%;
       text-indent: -9999px;
-      background: url("@/assets/images/logo.png") no-repeat center 18px /
-        contain;
+      background: url("@/assets/images/logo.png") no-repeat center 18px / contain;
     }
   }
 
@@ -235,7 +208,7 @@ const doLogin = () => {
       color: #999;
       display: inline-block;
 
-      ~ a {
+      ~a {
         border-left: 1px solid #ccc;
       }
     }
@@ -266,7 +239,7 @@ const doLogin = () => {
         position: relative;
         height: 36px;
 
-        > i {
+        >i {
           width: 34px;
           height: 34px;
           background: #cfcdcd;
@@ -311,7 +284,7 @@ const doLogin = () => {
         }
       }
 
-      > .error {
+      >.error {
         position: absolute;
         font-size: 12px;
         line-height: 28px;

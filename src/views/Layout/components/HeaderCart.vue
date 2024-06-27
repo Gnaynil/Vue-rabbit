@@ -6,25 +6,15 @@ const cartStore = useCartStore();
 
 <template>
   <div class="cart">
-    <a
-      class="curr"
-      href="javascript:;"
-    >
-      <i class="iconfont icon-cart"></i><em>{{ cartStore.cartList.length }}</em>
+    <a class="curr" href="javascript:;">
+      <i class="iconfont icon-cart"></i><p>{{ cartStore.cartList.length }}</p>
     </a>
     <div class="layer">
       <div class="list">
 
-        <div
-          class="item"
-          v-for="i in cartStore.cartList"
-          :key="i"
-        >
+        <div class="item" v-for="i in cartStore.cartList" :key="i">
           <RouterLink to="">
-            <img
-              :src="i.picture"
-              alt=""
-            />
+            <img :src="i.picture" alt="" />
             <div class="center">
               <p class="name ellipsis-2">
                 {{ i.name }}
@@ -36,23 +26,16 @@ const cartStore = useCartStore();
               <p class="count">x{{ i.count }}</p>
             </div>
           </RouterLink>
-          <i
-            class="iconfont icon-close-new"
-            @click="cartStore.delCart(i.skuId)"
-          ></i>
+          <i class="iconfont icon-close-new" @click="cartStore.delCart(i.skuId)"></i>
         </div>
 
       </div>
       <div class="foot">
         <div class="total">
-          <p>共 {{cartStore.allCount}} 件商品</p>
+          <p>共 {{ cartStore.allCount }} 件商品</p>
           <p>&yen; {{ cartStore.allPrice.toFixed(2) }}</p>
         </div>
-        <el-button
-          size="large"
-          type="primary"
-          @click="$router.push('/cartlist')"
-        >去购物车结算</el-button>
+        <el-button size="large" type="primary" @click="$router.push('/cartlist')">去购物车结算</el-button>
       </div>
     </div>
   </div>
@@ -75,7 +58,7 @@ const cartStore = useCartStore();
       font-size: 22px;
     }
 
-    em {
+    p {
       font-style: normal;
       position: absolute;
       right: 0;
@@ -89,7 +72,7 @@ const cartStore = useCartStore();
       font-family: Arial;
     }
   }
-
+  // 悬停上购物车显示
   &:hover {
     .layer {
       opacity: 1;
@@ -97,9 +80,11 @@ const cartStore = useCartStore();
     }
   }
 
+
   .layer {
-    opacity: 0;
+    opacity: 1;
     transition: all 0.4s 0.2s;
+    //无悬停 实现折叠动画效果
     transform: translateY(-200px) scale(1, 0);
     width: 400px;
     height: 400px;
@@ -110,7 +95,7 @@ const cartStore = useCartStore();
     background: #fff;
     border-radius: 4px;
     padding-top: 10px;
-
+    //实现小尖锥效果
     &::before {
       content: "";
       position: absolute;
@@ -148,6 +133,8 @@ const cartStore = useCartStore();
       }
     }
   }
+
+
 
   .list {
     height: 310px;

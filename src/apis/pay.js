@@ -5,3 +5,14 @@ export const getOrderAPI = (id) => {
     url: `/member/order/${id}`
   })
 }
+
+//模拟支付
+export const payMockAPI = (orderId) => {
+  return httpInstance({
+    url: '/pay/mock',
+    method:'GET',
+    params: {
+      orderId
+    }
+  })
+}

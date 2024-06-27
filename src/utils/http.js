@@ -8,7 +8,8 @@ import router from '@/router'
 //创建axios实例
 const httpInstance = axios.create({
     baseURL: "http://pcapi-xiaotuxian-front-devtest.itheima.net",
-    timeout: 5000
+    //响应时间50s
+    timeout: 50000
 })
 
 //设置请求拦截器 

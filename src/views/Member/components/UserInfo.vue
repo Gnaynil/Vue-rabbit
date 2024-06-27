@@ -33,7 +33,7 @@ onMounted(()=>getLikelist())
         <span class="iconfont icon-aq"></span>
         <p>安全设置</p>
       </a>
-      <a href="javascript:;">
+      <a href="/member/address">
         <span class="iconfont icon-dw"></span>
         <p>地址管理</p>
       </a>

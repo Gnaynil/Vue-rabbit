@@ -10,19 +10,18 @@ const getBanner = async () => {
 onMounted(() => {
   getBanner();
 });
-
+defineProps({
+  visible: Boolean
+})
 </script>
 
 
 
 <template>
-  <div class="home-banner">
+  <div class="home-banner" v-show="visible">
     <el-carousel height="500px">
-      <el-carousel-item
-        v-for="item in bannerList"
-        :key="item.id"
-      >
-        <img :src="item.imgUrl" alt="">
+      <el-carousel-item v-for="item in bannerList" :key="item.id">
+        <a :href="item.hrefUrl"><img :src="item.imgUrl" alt=""></a>
       </el-carousel-item>
     </el-carousel>
   </div>
@@ -32,7 +31,8 @@ onMounted(() => {
 
 <style scoped lang='scss'>
 .home-banner {
-  width: 1240px;
+  margin-left: 250px;
+  width: 990px;
   height: 500px;
   position: absolute;
   left: 0;
