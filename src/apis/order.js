@@ -12,14 +12,15 @@ export const getUserOrder = (params) => {
   return httpInstance({
     url: '/member/order',
     method: 'GET',
+    removeCache: true, // 配置标识 则这个请求如果频繁请求 则会中断上次请求保留最新一次请求
     params
   })
 }
 //获取订单详情
-export const getOrderInfoAPI = (id)=>{
+export const getOrderInfoAPI = (id) => {
   return httpInstance({
-    url:`/member/order/${id}`,
-    method:'GET'
+    url: `/member/order/${id}`,
+    method: 'GET'
   })
 }
 

@@ -2,9 +2,13 @@
 import { getUserOrder, getMemberOrderConsignmentAPI, getMemberOrderLogisticsAPI, putMemberOrderReceiptAPI, cancelOrderAPI } from '@/apis/order.js'
 import useCountDown from './useCountDown.vue';
 import { onMounted, ref } from 'vue'
-import axios from 'axios';
 import { ElMessage } from 'element-plus';
+import { useOrderStore } from '@/stores/order.js'
 
+const orderStore = useOrderStore()
+
+
+//Tab栏
 const tabTypes = [
   { name: "all", label: "全部订单" },
   { name: "unpay", label: "待付款" },
@@ -15,37 +19,23 @@ const tabTypes = [
   { name: "cancel", label: "已取消" }
 ]
 
-// 分页参数
-const orderList = ref([])
-const params = ref({
-  orderState: 0,
-  page: 1,
-  pageSize: 10
-})
-const total = ref()
+
+
 //获取订单列表
 const getOrderList = async () => {
-  show.value = false;
-  const res = await getUserOrder(params.value)
-  orderList.value = res.result.items
-  total.value = res.result.counts
-  //获取假数据
-  // const res = await axios.get('http://localhost:3000/result')
-  // orderList.value = res.data.items
-  // total.value = res.data.counts
-  show.value = true
+  
+  await orderStore.updateNewOrderList(orderStore.orderParamsState)
 }
-onMounted(() => { getOrderList(0); })
-//订单分页
+onMounted(() => { getOrderList() })
+
+
+//切换订单分页
 const handleChange = (tab) => {
-  params.value.page = 1;
-  params.value.orderState = tab.index;
-  getOrderList()
+  orderStore.handleTabsChange(tab)
 }
-const show = ref(true)
 const pagesChange = (page) => {
-  params.value.page = page
-  getOrderList()
+  console.log(page);
+  orderStore.handlePagesChange(page)
 }
 //获取订单状态
 const orderStateList = [
@@ -72,10 +62,6 @@ const getLogistics = async (id) => {
   const res = await getMemberOrderLogisticsAPI(id)
   LogisticsList.value = res.result.list
   LogisticsCompany.value = res.result.company
-  //假数据
-  // const res = await axios.get('http://localhost:3301/result')
-  // LogisticsList.value = res.data.list
-  // LogisticsCompany.value = res.data.company
   dialogVisible.value = true
 }
 
@@ -92,9 +78,9 @@ const cancelOrder = async () => {
   await cancelOrderAPI(cancelId.value, cancelReason.value);
   cancelVisible.value = false
   getOrderList()
-  setTimeout(()=>{
+  setTimeout(() => {
     ElMessage.success('取消成功')
-  },1000)
+  }, 1000)
 
 }
 
@@ -102,19 +88,20 @@ const cancelOrder = async () => {
 
 <template>
   <div class="order-container">
-    <el-tabs @tab-click="handleChange">
+    <el-tabs @tab-click="handleChange" v-model='tabTypes[orderStore.orderParamsState].name'>
       <!-- tab切换 -->
-      <el-tab-pane v-for="item in tabTypes" :key="item.name" :label="item.label" />
+      <el-tab-pane v-for="item in tabTypes" :key="item.name" :label="item.label" :name="item.name" />
 
       <div class="main-container">
-        <XtxLoading v-show="!show" />
-        <div v-show="show">
-          <div class="holder-container" v-if="orderList.length === 0">
+        <XtxLoading v-if="orderStore.showLoading" />
+        <div v-else>
+          <div class="holder-container" v-if="!orderStore.orderList[orderStore.orderParamsState].length > 0">
             <el-empty description="暂无订单数据" />
           </div>
           <div v-else>
             <!-- 订单列表 -->
-            <div class="order-item" v-for="order in orderList" :key="order.id">
+            <div class="order-item" v-for="order in orderStore.orderList[orderStore.orderParamsState]" :key="order.id">
+              {{ orderStore.orderList[orderStore.orderParamsState].items }}
               <div class="head">
                 <span>下单时间：{{ order.createTime }}</span>
                 <span>订单编号：{{ order.id }}</span>
@@ -165,7 +152,8 @@ const cancelOrder = async () => {
                   <p>{{ order.payType === 1 ? '在线支付' : '货到付款' }}</p>
                 </div>
                 <div class="column action state">
-                  <el-button v-if="order.countdown !== -1 && order.orderState === 1" type="primary" @click="$router.push(`/pay?id=${order.id}`)" size="small">
+                  <el-button v-if="order.countdown !== -1 && order.orderState === 1" type="primary"
+                    @click="$router.push(`/pay?id=${order.id}`)" size="small">
                     立即付款
                   </el-button>
                   <el-button v-if="order.orderState === 3" type="primary" size="small" @click="receiptOrder(order.id)">
@@ -179,15 +167,16 @@ const cancelOrder = async () => {
                     <a href="javascript:;">申请售后</a>
                   </p> -->
                   <p v-if="order.orderState === 1">
-                    <a @click="cancelVisible = true;cancelId=order.id" class="green">取消订单</a>
+                    <a @click="cancelVisible = true; cancelId = order.id" class="green">取消订单</a>
                   </p>
                 </div>
               </div>
             </div>
             <!-- 分页 -->
             <div class="pagination-container">
-              <el-pagination background layout="prev, pager, next" :total="total" :page-size="params.pageSize"
-                :pager-count="11" @current-change="pagesChange" />
+              <el-pagination background layout="prev, pager, next"
+                :total="parseInt(orderStore.total[orderStore.orderParamsState])" :page-size="10" :pager-count="11"
+                @current-change="pagesChange" :current-page="orderStore.params[orderStore.orderParamsState].page" />
             </div>
           </div>
         </div>

@@ -8,4 +8,6 @@ export const useCategoryStore = defineStore("category", () => {
         categoryList.value = res.result;
     };
     return { categoryList, getCategory }
+}, {
+    persist: true
 });
