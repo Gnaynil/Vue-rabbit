@@ -19,7 +19,7 @@ import { onMounted } from 'vue';
 
 const categoryStore = useCategoryStore();
 onMounted(() => {
-  if (categoryStore.categoryList.value === void .0) {
+  if (categoryStore.categoryList === void .0) {
     categoryStore.getCategory()
   }
 })

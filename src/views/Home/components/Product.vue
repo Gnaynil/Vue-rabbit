@@ -18,29 +18,19 @@ onMounted(() => {
 <template>
   <div class="home-product">
 
-    <Pannel
-      :title="cate.name"
-      v-for="cate in goodsProduct"
-      :key="cate.id"
-    >
+    <Pannel :title="cate.name" v-for="cate in goodsProduct" :key="cate.id">
       <template #main>
         <div class="box">
-          <RouterLink
-            class="cover"
-            :to="`/category/${cate.id}`"
-          >
+          <div class="cover">
             <img v-img-lazy="cate.picture" />
             <strong class="label">
               <span>{{ cate.name }}馆</span>
               <span class="ellipsis">{{ cate.saleInfo }}</span>
             </strong>
-          </RouterLink>
+          </div>
           <ul class="goods-list">
-            <li
-              v-for="good in cate.goods"
-              :key="good.id"
-            >
-              <GoodsItem :goods ="good" />
+            <li v-for="good in cate.goods" :key="good.id">
+              <GoodsItem :goods="good" />
             </li>
           </ul>
         </div>
@@ -54,6 +44,7 @@ onMounted(() => {
 .home-product {
   background: #fff;
   margin-top: 20px;
+
   .sub {
     margin-bottom: 2px;
 
@@ -137,7 +128,7 @@ onMounted(() => {
       }
     }
 
-   
+
   }
 }
 </style>

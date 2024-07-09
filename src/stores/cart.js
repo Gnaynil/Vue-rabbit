@@ -85,7 +85,7 @@ export const useCartStore = defineStore('cart', () => {
     //通过skuId找到要修改的那一项,然后把它的selected修改为传过来的selected
     const item = cartList.value.find((item) => { return item.skuId === skuId })
     item.selected = selected
-    console.log(item.selected, 'singleCheck');
+    // console.log(item.selected, 'singleCheck');
     //单品已改变
     item.change = true
   }

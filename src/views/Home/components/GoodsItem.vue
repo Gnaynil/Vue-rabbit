@@ -1,14 +1,8 @@
 <template>
-  <RouterLink
-    :to="`/detail/${goods.id}`"
-    class="goods-item"
-  >
-    <img
-      v-img-lazy="goods.picture"
-      alt=""
-    />
+  <RouterLink :to="`/detail/${goods.id}`" class="goods-item">
+    <img v-img-lazy="goods.picture" alt="" />
     <p class="name ellipsis">{{ goods.name }}</p>
-    <p class="desc ellipsis">{{ goods.desc }}</p>
+    <p class="desc ellipsis-2">{{ goods.desc }}</p>
     <p class="price">&yen;{{ goods.price }}</p>
   </RouterLink>
 </template>
@@ -17,7 +11,7 @@
 defineProps({
   goods: {
     type: Object,
-    default: () => {},
+    default: () => { },
   },
 });
 </script>
@@ -31,7 +25,7 @@ defineProps({
   transition: all 0.5s;
 
   &:hover {
-    transform: translate3d(0, -3px, 0);
+    transform: translate(0, -3px);
     box-shadow: 0 3px 8px rgb(0 0 0 / 20%);
   }
 
@@ -50,7 +44,7 @@ defineProps({
 
   .desc {
     color: #999;
-    height: 29px;
+    height: 50px;
   }
 
   .price {

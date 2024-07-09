@@ -1,9 +1,7 @@
 import { useUserStore } from "@/stores/user";
+import { useOrderStore } from '@/stores/order';
 
 import axios from "axios";
-
-
-
 import { ElMessage } from 'element-plus'
 import 'element-plus/theme-chalk/el-message.css'
 import router from '@/router'
@@ -60,30 +58,27 @@ httpInstance.interceptors.response.use(res => {
     if (removeCache) removeCacheRequest(`${url}&${method}`)
     return res.data
 }, e => {
-    console.log(e);
     if (isCancel(e)) {
         // 通过CancelToken取消的请求不做任何处理
         return Promise.reject({
             message: '重复请求，自动拦截并取消'
         })
     }
-
     const userStore = useUserStore()
     //统一错误提示
     ElMessage({
         type: 'warning',
-        message: e.response.data.message
+        message: '获取数据失败'
     })
-
+    const orderStore = useOrderStore()
+    orderStore.getdataState = false;
     //401tokenb失效处理
     //1.清楚本地用户数据
     //2.跳转到登录页
-    if (e.response.status === 401) {
+    if (e.response?.status === 401) {
         userStore.clearUserInfo()
         router.push('/login')
     }
-
-
 })
 
 export default httpInstance;

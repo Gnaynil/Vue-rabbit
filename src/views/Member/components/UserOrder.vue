@@ -1,13 +1,10 @@
 <script setup>
-import { getUserOrder, getMemberOrderConsignmentAPI, getMemberOrderLogisticsAPI, putMemberOrderReceiptAPI, cancelOrderAPI } from '@/apis/order.js'
 import useCountDown from './useCountDown.vue';
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus';
 import { useOrderStore } from '@/stores/order.js'
 
 const orderStore = useOrderStore()
-
-
 //Tab栏
 const tabTypes = [
   { name: "all", label: "全部订单" },
@@ -18,26 +15,20 @@ const tabTypes = [
   { name: "complete", label: "已完成" },
   { name: "cancel", label: "已取消" }
 ]
-
-
-
 //获取订单列表
 const getOrderList = async () => {
-  
   await orderStore.updateNewOrderList(orderStore.orderParamsState)
 }
 onMounted(() => { getOrderList() })
-
-
-//切换订单分页
+//切换Tabs标签页
 const handleChange = (tab) => {
   orderStore.handleTabsChange(tab)
 }
+//切换分页
 const pagesChange = (page) => {
-  console.log(page);
   orderStore.handlePagesChange(page)
 }
-//获取订单状态
+//订单状态
 const orderStateList = [
   { id: 0, text: '' },
   { id: 1, text: '待付款' },
@@ -47,43 +38,26 @@ const orderStateList = [
   { id: 5, text: '已完成' },
   { id: 6, text: '已取消' },
 ]
-
-//模拟发货
-const onOrderSend = async (id) => {
-  await getMemberOrderConsignmentAPI(id)
-  ElMessage.success('模拟发货成功')
-  getOrderList()
-}
 //查看物流信息
 const dialogVisible = ref(false)
-const LogisticsList = ref([])
-const LogisticsCompany = ref({})
+const logisticsSkeleton = ref(true)
 const getLogistics = async (id) => {
-  const res = await getMemberOrderLogisticsAPI(id)
-  LogisticsList.value = res.result.list
-  LogisticsCompany.value = res.result.company
+  logisticsSkeleton.value = true
   dialogVisible.value = true
-}
-
-//确认收货 
-const receiptOrder = async (id) => {
-  await putMemberOrderReceiptAPI(id);
-  getOrderList()
+  await orderStore.getLogistics(id)
+  logisticsSkeleton.value = false
 }
 //取消订单
 const cancelVisible = ref(false)
 const cancelReason = ref('')
 const cancelId = ref()
 const cancelOrder = async () => {
-  await cancelOrderAPI(cancelId.value, cancelReason.value);
+  await orderStore.handleCancelOrder(cancelId.value, cancelReason.value)
   cancelVisible.value = false
-  getOrderList()
   setTimeout(() => {
     ElMessage.success('取消成功')
   }, 1000)
-
 }
-
 </script>
 
 <template>
@@ -91,11 +65,10 @@ const cancelOrder = async () => {
     <el-tabs @tab-click="handleChange" v-model='tabTypes[orderStore.orderParamsState].name'>
       <!-- tab切换 -->
       <el-tab-pane v-for="item in tabTypes" :key="item.name" :label="item.label" :name="item.name" />
-
       <div class="main-container">
-        <XtxLoading v-if="orderStore.showLoading" />
+        <XtxLoading v-if="orderStore.showLoading" :code="orderStore.getdataState" />
         <div v-else>
-          <div class="holder-container" v-if="!orderStore.orderList[orderStore.orderParamsState].length > 0">
+          <div class="holder-container" v-if="!orderStore.orderList[orderStore.orderParamsState]?.length > 0">
             <el-empty description="暂无订单数据" />
           </div>
           <div v-else>
@@ -108,14 +81,14 @@ const cancelOrder = async () => {
                 <!-- 未付款，倒计时时间还有 -->
                 <span class="down-time" v-if="order.orderState === 1">
                   <i class="iconfont icon-down-time"></i>
-                  <useCountDown :count="order.countdown" />
+                  <useCountDown :count="order.countdown" :payLatestTime="order.payLatestTime" />
                 </span>
               </div>
               <div class="body">
                 <div class="column goods">
                   <ul>
                     <li v-for="item in order.skus" :key="item.id">
-                      <a class="image" href="javascript:;">
+                      <a class="image" :href="`/detail/${item.spuId}`">
                         <img :src="item.image" alt="" />
                       </a>
                       <div class="info">
@@ -134,7 +107,7 @@ const cancelOrder = async () => {
                 <div class="column state">
                   <p>{{ orderStateList.find(e => e.id === order.orderState).text }}</p>
                   <p v-if="order.orderState === 2">
-                    <a class="green" @click="onOrderSend(order.id)">模拟发货</a>
+                    <a class="green" @click="orderStore.onOrderSend(order.id)">模拟发货</a>
                   </p>
                   <p v-if="[3, 4, 5].includes(order.orderState)">
                     <a @click="getLogistics(order.id)" class="green">查看物流</a>
@@ -156,14 +129,15 @@ const cancelOrder = async () => {
                     @click="$router.push(`/pay?id=${order.id}`)" size="small">
                     立即付款
                   </el-button>
-                  <el-button v-if="order.orderState === 3" type="primary" size="small" @click="receiptOrder(order.id)">
+                  <el-button v-if="order.orderState === 3" type="primary" size="small"
+                    @click="orderStore.receiptOrder(order.id)">
                     确认收货
                   </el-button>
                   <p><a :href="`/orderdetail/${order.id}`">查看详情</a></p>
-                  <!-- <p v-if="[2, 3, 4, 5].includes(order.orderState)">
-                    <a href="javascript:;">再次购买</a>
+                  <p v-if="[2, 3, 4, 5].includes(order.orderState)">
+                    <a :href="`/checkout/${order.id}`">再次购买</a>
                   </p>
-                  <p v-if="[4, 5].includes(order.orderState)">
+                  <!-- <p v-if="[4, 5].includes(order.orderState)">
                     <a href="javascript:;">申请售后</a>
                   </p> -->
                   <p v-if="order.orderState === 1">
@@ -180,15 +154,32 @@ const cancelOrder = async () => {
             </div>
           </div>
         </div>
-
       </div>
-
     </el-tabs>
-    <el-dialog v-model="dialogVisible" title="物流信息" width="600px">
-      <div v-for="item in LogisticsList" :key="item.id" class="shipment">
-        <div class="time">{{ item.time }}</div>
-        <div class="message">{{ item.text }}</div>
+    <el-dialog v-model="dialogVisible" title="物流信息" width="600px" style="border-radius: 10px;">
+      <el-skeleton :rows="5" v-show="logisticsSkeleton" />
+      <div class="company" v-show="!logisticsSkeleton">
+        <div class="name">{{ orderStore.orderLogisticsCompany.name }}
+          <b v-copy="orderStore.orderLogisticsCompany.number" id="text-content">
+            <el-tooltip content="复制快递单号" placement="top-start">
+              {{ orderStore.orderLogisticsCompany.number }}
+            </el-tooltip>
+          </b>
+        </div>
+        <p class="tel">联系电话：
+          <b v-copy="orderStore.orderLogisticsCompany.tel">
+            <el-tooltip content="复制联系电话" placement="bottom">
+              {{ orderStore.orderLogisticsCompany.tel }}
+            </el-tooltip>
+          </b>
+        </p>
       </div>
+      <el-timeline class="shipment" v-show="!logisticsSkeleton">
+        <el-timeline-item v-for="item in orderStore.orderLogisticsList" :key="item.id" :timestamp="item.time"
+          placement="top">
+          {{ item.text }}
+        </el-timeline-item>
+      </el-timeline>
     </el-dialog>
     <el-dialog v-model="cancelVisible" title="取消订单" width="600px">
       <p>取消订单原因:</p><input v-model="cancelReason" />
@@ -198,7 +189,6 @@ const cancelOrder = async () => {
         </span>
       </template>
     </el-dialog>
-
   </div>
 
 </template>
@@ -365,23 +355,36 @@ const cancelOrder = async () => {
   }
 }
 
-.shipment {
+.company {
   display: flex;
-  border-radius: 10px;
+  position: relative;
+
+  .name {
+    font-size: 14px;
+    color: #666,
+  }
+
+  .tel {
+    position: absolute;
+    right: 0;
+  }
+
+  b {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.shipment {
+  max-width: 600px;
   background-color: #fff;
-  height: 16px;
-  line-height: 16px;
-  margin: 20px;
+  min-height: 200px;
+  margin: 20px 0 0 10px;
 
   .message {
     margin-left: 10px;
     font-size: 20px;
     color: #444
-  }
-
-  .time {
-    font-size: 16px;
-    color: #666
   }
 }
 </style>

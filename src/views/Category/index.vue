@@ -23,13 +23,14 @@ const { bannerList } = useBanner()
       </div>
     </div>
     <!-- 轮播图 -->
-    <div class="home-banner">
+    <XtxBanner :width="1240" :bannerList="bannerList" :type="2" />
+    <!-- <div class="home-banner">
       <el-carousel height="500px">
         <el-carousel-item v-for="item in bannerList" :key="item.id">
           <a :href="item.hrefUrl"><img :src="item.imgUrl" alt=""></a>
         </el-carousel-item>
       </el-carousel>
-    </div>
+    </div> -->
     <!-- 分类 -->
     <div class="sub-list">
       <h3>全部分类</h3>
@@ -56,6 +57,7 @@ const { bannerList } = useBanner()
 
 <style scoped lang="scss">
 .top-category {
+  user-select: none;
   h3 {
     font-size: 28px;
     color: #666;
@@ -130,18 +132,6 @@ const { bannerList } = useBanner()
 
   .bread-container {
     padding: 25px 0;
-  }
-}
-
-.home-banner {
-  width: 1240px;
-  height: 500px;
-  // position: absolute;
-  margin: 0 auto;
-
-  img {
-    width: 100%;
-    height: 500px;
   }
 }
 </style>
