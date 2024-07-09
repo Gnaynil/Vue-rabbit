@@ -150,7 +150,7 @@ const cancelOrder = async () => {
             <div class="pagination-container">
               <el-pagination background layout="prev, pager, next"
                 :total="parseInt(orderStore.total[orderStore.orderParamsState])" :page-size="10" :pager-count="11"
-                @current-change="pagesChange" :current-page="orderStore.params[orderStore.orderParamsState].page" />
+                @current-change="pagesChange" :current-page="orderStore.params.page" />
             </div>
           </div>
         </div>

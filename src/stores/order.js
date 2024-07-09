@@ -18,18 +18,10 @@ export const useOrderStore = defineStore('order', () => {
     for (let i = 0; i < 7; i++) {
         updated.value[i] = false
     }
-
-    //设置订单分页参数
+    //设置订单分页参数 orderParamsState是索引
     const orderParamsState = ref(0)
-    let pageCase = {
-        page: 1,
-        pageSize: 10
-    }
-    //初始化页面参数
-    const params = ref([])
-    for (let i = 0; i < 7; i++) {
-        params.value.push(pageCase)
-    }
+    const params = ref({ page: 1, pageSize: 10 }
+    )
     //订单总数
     const total = ref([])
     for (let i = 0; i < 7; i++) {
@@ -54,7 +46,7 @@ export const useOrderStore = defineStore('order', () => {
         //获取订单数据
         const res = await getUserOrder({
             orderState: orderParamsState.value,
-            ...params.value[orderParamsState.value]
+            ...params.value
         })
         if (res !== void 0) {
             updated.value[orderParamsState.value] = true
@@ -68,12 +60,13 @@ export const useOrderStore = defineStore('order', () => {
     //切换Tab
     const handleTabsChange = (tab) => {
         orderParamsState.value = tab.index;
+        params.value.page = 1
         updateNewOrderList()
     }
     //切换分页
     const handlePagesChange = (page) => {
         //切换分页
-        params.value[orderParamsState.value].page = page
+        params.value.page = page
         //重置更新判断
         updated.value[orderParamsState.value] = false
         //更新订单列表
