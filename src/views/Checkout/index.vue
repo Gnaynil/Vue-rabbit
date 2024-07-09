@@ -1,20 +1,30 @@
 <script setup>
 import { getCheckoutInfoAPI, createOrderAPI } from "@/apis/checkout";
 import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useCartStore } from "@/stores/cart.js";
 import { addAddressAPI } from '@/apis/address.js'
+import { repurchaseOrderAPI } from '@/apis/order.js'
 //获取地区级联
 import { regionData, codeToText } from 'element-china-area-data'
 import { ElMessage } from "element-plus";
+import { useOrderStore } from "@/stores/order";
 const cartStore = useCartStore();
-
+const orderStore = useOrderStore()
+const route = useRoute()
 const router = useRouter()
 const checkInfo = ref({}); // 订单对象
 const curAddress = ref({}); // 地址对象
 const getCheckInfo = async () => {
-  const res = await getCheckoutInfoAPI();
-  checkInfo.value = res.result;
+  //再次购买信息
+  if (route.params.id) {
+    const res = await repurchaseOrderAPI(route.params.id);
+    checkInfo.value = res.result
+  }
+  else {
+    const res = await getCheckoutInfoAPI();
+    checkInfo.value = res.result;
+  }
   //适配默认地址
   // 从默认地址中筛选出来 isDefault ===0那一项
   const item = checkInfo.value.userAddresses.find(
@@ -97,6 +107,8 @@ const creteOrder = async () => {
     }),
     addressId: curAddress.value.id,
   });
+  orderStore.updated[0] = false
+  orderStore.orderParamsState = 0
   const orderId = res.result.id
   if (activePay.value === 2) {
     console.log('货到付款');

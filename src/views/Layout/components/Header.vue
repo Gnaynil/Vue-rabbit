@@ -39,7 +39,7 @@ const categoryStore = useCategoryStore();
 <style scoped lang='scss'>
 .app-header {
   background: #fff;
-
+  user-select: none;
   .container {
     display: flex;
     align-items: center;

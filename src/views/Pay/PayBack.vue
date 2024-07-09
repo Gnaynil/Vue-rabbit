@@ -2,12 +2,18 @@
 import { getOrderAPI } from '@/apis/pay'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useOrderStore } from "@/stores/order";
 const route = useRoute()
+console.log(route.query);
 const orderInfo = ref({})
-
+const orderStore = useOrderStore()
 const getOrderInfo = async () => {
   const res = await getOrderAPI(route.query.orderId)
   orderInfo.value = res.result
+  if (route.query.payResult === true) {
+    orderStore.updated[0] = false
+    orderStore.orderParamsState = 0
+  }
 }
 
 onMounted(() => getOrderInfo())
@@ -21,12 +27,13 @@ onMounted(() => getOrderInfo())
       <!-- 支付结果 -->
       <div class="pay-result">
         <!-- 路由参数获取到的是字符串而不是布尔值 -->
-        <span class="iconfont icon-queren2 green" v-if="$route.query.payResult === 'true'"></span>
+        <span class="iconfont icon-queren2 green"
+          v-if="$route.query.payResult === 'true' || orderInfo.orderState === 2"></span>
         <span class="iconfont icon-shanchu red" v-else></span>
-        <p class="tit" v-if="$route.query">支付{{ $route.query.payResult === 'true' ? '成功' : '失败' }}</p>
-        <p class="tit" v-else-if="orderInfo.orderState===2">支付{{ orderInfo.orderState===2 ? '成功' : '失败' }}</p>
+        <p class="tit" v-if="$route.query.payResult">支付{{ $route.query.payResult === 'true' ? '成功' : '失败' }}</p>
+        <!-- <p class="tit" v-else-if="orderInfo.orderState === 2">支付{{ orderInfo.orderState === 2 ? '成功' : '失败' }}</p> -->
         <!-- <p class="tip">我们将尽快为您发货，收货期间请保持手机畅通</p> -->
-        <p>支付方式：<span>{{orderInfo.payChannel===1?'支付宝':'微信'}}</span></p>
+        <p>支付方式：<span>{{ orderInfo.payChannel === 1 ? '支付宝' : '微信' }}</span></p>
         <p>支付金额：<span>¥{{ orderInfo.payMoney?.toFixed(2) }}</span></p>
         <div class="btn">
           <el-button type="primary" style="margin-right:20px"

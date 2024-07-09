@@ -31,12 +31,12 @@ const payUrl = `${baseURL}pay/aliPay?orderId=${route.query.id}&redirect=${redire
 
 //模拟支付
 const payMock = async () => {
-  const res = await payMockAPI(route.query.id);
-  console.log(res);
+  await payMockAPI(route.query.id);
   router.push({
     path: '/paycallback',
     query: {
-      id: route.query.id
+      orderId: route.query.id,
+      payResult: true
     }
   })
 }
@@ -44,8 +44,12 @@ const payMock = async () => {
 
 <template>
 
-  <div class="xtx-pay-page">
-    <div class="container" v-show="show">
+  <div class="xtx-pay-page" v-show="show">
+    <div class="pay-timeout" v-if="payInfo.countdown < 0">
+      <span class="iconfont icon-shanchu red"></span>
+      <p>支付超时</p>
+    </div>
+    <div class="container" v-else>
       <!-- 付款信息 -->
       <div class="pay-info">
         <span class="icon iconfont icon-queren2"></span>
@@ -77,13 +81,28 @@ const payMock = async () => {
         </div>
       </div>
     </div>
-    <XtxLoading v-show="!show"></XtxLoading>
   </div>
+  <XtxLoading v-show="!show"></XtxLoading>
 </template>
 
 <style scoped lang="scss">
 .xtx-pay-page {
   margin-top: 20px;
+}
+
+.pay-timeout {
+  padding: 100px 0;
+  background: #fff;
+  text-align: center;
+  margin-top: 20px;
+
+  .iconfont {
+    font-size: 60px;
+  }
+
+  .red {
+    color: $priceColor;
+  }
 }
 
 .pay-info {
@@ -168,17 +187,19 @@ const payMock = async () => {
     &.wx {
       background: url(https://cdn.cnbj1.fds.api.mi-img.com/mi-mall/c66f98cff8649bd5ba722c2e8067c6ca.jpg) no-repeat center / contain;
     }
-    &.mock{
+
+    &.mock {
       position: relative;
-      top:-20px
+      cursor: pointer;
+      top: -20px
     }
 
-    &.disabled {
-      opacity: 0.3;
-      border-color: #f5f5f5;
-      background-color: #F0F0F0;
-      cursor: not-allowed;
-    }
+    // &.disabled {
+    //   opacity: 0.3;
+    //   border-color: #f5f5f5;
+    //   background-color: #F0F0F0;
+    //   cursor: not-allowed;
+    // }
   }
 }
 </style>

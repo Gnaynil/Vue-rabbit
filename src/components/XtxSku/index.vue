@@ -7,11 +7,13 @@ const props = defineProps({
     default: () => {},
   },
 });
+console.log(props.goods);
 //需要在setup函数里定义defineEmits才能正常使用 不能在函数内定义defineEmits
 const emits = defineEmits(["change"]);
 let pathMap = {};
 //点击时实时更新sku
 const changeSelectedStatus = (item, val) => {
+  console.log(item,val);
   if (val.disabled) return;
   if (val.selected) {
     val.selected = false;

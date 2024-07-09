@@ -34,6 +34,13 @@ export const deleteOrder = (ids) => {
     }
   })
 }
+//再次购买订单 仅在仅在订单状态为待发货，待收货,待评价，已完成，可再次购买
+export const repurchaseOrderAPI = (id)=>{
+  return httpInstance({
+    url:`/member/order/repurchase/${id}`,
+    method:'GET'
+  })
+}
 //取消订单
 export const cancelOrderAPI = (id, reason) => {
   return httpInstance({

@@ -3,6 +3,7 @@
 import ImageView from '@/components/ImageView/index.vue'
 import Sku from '@/components/XtxSku/index.vue'
 import Loading from '@/components/Loading/index.vue'
+import Banner from '@/components/Banner/index.vue'
 // import Sku from '@/components/XtxSku/Sku.vue'
 
 
@@ -12,5 +13,6 @@ export const componentPlugin = {
         app.component('XtxImageView',ImageView)
         app.component('XtxSku',Sku)
         app.component('XtxLoading',Loading)
+        app.component('XtxBanner',Banner)
     }
 }

@@ -3,13 +3,13 @@ import { useCartStore } from "@/stores/cart.js";
 import { useUserStore } from "@/stores/user.js";
 import { useRouter } from "vue-router";
 import { ElMessage } from 'element-plus'
-import { computed, onMounted,ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 const cartStore = useCartStore();
 const userStore = useUserStore();
 const isLogin = computed(() => userStore.userInfo.token)
 const router = useRouter()
 const singleCheck = (i, selected) => {
-  console.log(i.name, selected);  //通过skuId找到要修改的那一项,然后把它的selected修改为传过来的selected
+  //通过skuId找到要修改的那一项,然后把它的selected修改为传过来的selected
   cartStore.singleCheck(i.skuId, selected);
 };
 const allCheck = (selected) => {
@@ -18,6 +18,10 @@ const allCheck = (selected) => {
 const show = ref(false)
 //下单结算
 const onCheckOut = async () => {
+  //判断是否购物车有选中的商品
+  if (cartStore.selectedCount === 0) {
+    return
+  }
   //判断登录状态
   if (isLogin.value) {
     await cartStore.changeCart()
@@ -52,7 +56,8 @@ onMounted(() => {
           <thead>
             <tr>
               <th width="120">
-                <el-checkbox :modelValue="cartStore.isAll" @change="allCheck" v-show="cartStore.cartList.length !== 0"/>
+                <el-checkbox :modelValue="cartStore.isAll" @change="allCheck"
+                  v-show="cartStore.cartList.length !== 0" />
               </th>
               <th width="400">商品信息</th>
               <th width="220">单价</th>
@@ -117,8 +122,10 @@ onMounted(() => {
           共 {{ cartStore.selectedCount }} 件商品，已选择 {{ cartStore.selectedCount }} 件，商品合计：
           <span class="red">¥ {{ cartStore.selectedPrice.toFixed(2) }} </span>
         </div>
+
         <div class="total">
-          <el-button size="large" type="primary" @click="onCheckOut" >下单结算</el-button>
+          <el-button size="large" type="primary" @click="onCheckOut"
+            :class="{ disabled: cartStore.selectedCount === 0 }">下单结算</el-button>
         </div>
       </div>
     </div>
@@ -241,6 +248,15 @@ onMounted(() => {
       margin-right: 20px;
       font-weight: bold;
     }
+
+    // .total {
+    //   .disabled {
+    //     opacity: 0.5;
+    //     border-color: #f5f5f5;
+    //     background-color: #F0F0F0;
+    //     cursor: not-allowed;
+    //   }
+    // }
   }
 
   .tit {

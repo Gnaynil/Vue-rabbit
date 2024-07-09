@@ -1,6 +1,6 @@
 <template>
     <b>付款截止:
-        <b v-if="count === -1">已超时</b>
+        <b v-if="count < 0">已超时</b>
         <b v-else>{{ countDown.formatTime }}</b>
     </b>
 </template>
@@ -9,11 +9,18 @@
 import { useCountDown } from "@/components/useCountDown";
 const countDown = useCountDown();
 const props = defineProps({
-    count: {
-        type: Number,
-    }
+    payLatestTime:{
+        type:String
+    },
 });
-countDown.start(props.count)
+//获取当前时间戳
+const nowDate = Math.round(new Date().getTime()/1000)
+//获取截止时间的时间戳
+const LatestDate = Date.parse(props.payLatestTime)/1000
+//倒计时
+const count = LatestDate- nowDate
+// console.log(count);
+countDown.start(count)
 
 
 </script>
